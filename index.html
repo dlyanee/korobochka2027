@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Новогодняя коробочка</title>
+<style>
+:root{--plum:#5D2C70;--ink:#2B1636;--gold:#D4A64A;--blush:#FADCD9;--ivory:#FFF8F5;--line:#E7CFC9;--err:#B3261E;--ok:#287044}
+*{box-sizing:border-box}
+body{margin:0;background:var(--ivory);color:var(--ink);font:400 16px/1.55 Arial,system-ui,sans-serif}
+.hero{background:var(--blush);text-align:center;padding:48px 20px 76px}
+h1{font:700 clamp(34px,7vw,52px)/1.08 Georgia,serif;color:var(--plum);margin:0 auto 15px;max-width:680px}
+.lead{max-width:650px;margin:0 auto;font-size:18px}
+.notice{max-width:650px;margin:25px auto 0;padding:17px 20px;border:2px solid var(--gold);border-radius:16px;background:#fffdf9;text-align:left}
+.notice p{margin:0}.notice p+p{margin-top:10px}
+.notice strong{color:var(--plum)}
+main{max-width:670px;margin:-42px auto 60px;padding:0 16px}
+form,.done{background:#fff;border-radius:22px;padding:30px 24px;box-shadow:0 12px 40px rgba(93,44,112,.14)}
+h2{font:700 29px/1.15 Georgia,serif;color:var(--plum);margin:0 0 11px}
+.intro{margin:0 0 24px;color:#624f69}
+.f,fieldset{margin:0 0 20px}
+label,legend{display:block;font-weight:700;margin-bottom:7px;padding:0}
+fieldset{border:0;padding:0}
+input[type=text],input[type=number],textarea{display:block;width:100%;font:inherit;padding:13px 14px;border:1.5px solid var(--line);border-radius:12px;background:var(--ivory);color:var(--ink)}
+textarea{min-height:88px;resize:vertical}
+input:focus-visible,textarea:focus-visible{outline:3px solid var(--gold);outline-offset:1px;border-color:var(--plum)}
+.two-lines{display:grid;gap:13px}
+.hint{font-size:14px;color:#755f7b;margin:5px 0 0}
+.important{background:#FFF4DC;border:2px solid var(--gold);border-radius:16px;padding:15px 18px;margin:2px 0 22px}
+.important strong{color:var(--plum)}
+.opt{display:flex;align-items:flex-start;gap:11px;padding:11px 14px;border:1.5px solid var(--line);border-radius:12px;cursor:pointer;font-weight:400}
+.opt input{accent-color:var(--plum);width:20px;height:20px;margin:2px 0 0;flex:none}
+.err{display:none;color:var(--err);font-size:14px;margin-top:5px}.bad .err{display:block}.bad input,.bad textarea{border-color:var(--err)}
+.hp{position:absolute;left:-9999px}
+button{display:block;width:100%;font:700 18px Arial,sans-serif;color:#fff;background:var(--plum);border:0;border-radius:14px;padding:16px;cursor:pointer;margin-top:6px}
+button:hover{background:#4b2359}button:focus-visible{outline:3px solid var(--gold);outline-offset:3px}button:disabled{opacity:.65;cursor:wait}
+#fail{display:none;color:var(--err);margin-top:14px;text-align:center}.done{display:none;border:2px solid var(--gold);padding:36px 24px;text-align:center}.done h2{font-size:32px}.done button{background:#fff;color:var(--plum);border:2px solid var(--plum)}
+@media (max-width:480px){.hero{padding:38px 16px 66px}form,.done{padding:25px 18px}}
+</style>
+</head>
+<body>
+<header class="hero">
+  <h1>Новогодняя коробочка</h1>
+  <p class="lead">Анкета для семей, оказавшихся в тяжёлой жизненной ситуации.</p>
+  <div class="notice">
+    <p><strong>Пожалуйста, заполняйте форму, если вы действительно находитесь в сложной жизненной ситуации.</strong></p>
+    <p>Например: вы воспитываете ребёнка в одиночку, у вас многодетная семья, супруг не работает или есть другие серьёзные обстоятельства.</p>
+  </div>
+</header>
+
+<main>
+<form id="form" novalidate>
+  <h2>Расскажите о ребёнке</h2>
+  <p class="intro">Пожалуйста, заполните анкету внимательно. Так нам будет проще подобрать подходящий подарок.</p>
+
+  <div class="important">
+    <strong>Важно:</strong> подарок вручает не Дед Мороз, а представитель церкви в протестантской церкви.
+  </div>
+
+  <div class="f" data-f="fio">
+    <label for="fio">ФИО</label>
+    <input type="text" id="fio" autocomplete="name" placeholder="Иванова Мария Ивановна">
+    <p class="hint">Фамилия, имя и отчество — именно в таком порядке.</p>
+    <div class="err">Укажите фамилию, имя и отчество полностью.</div>
+  </div>
+
+  <div class="f" data-f="childName">
+    <label for="childName">Имя ребёнка</label>
+    <input type="text" id="childName" placeholder="Например: Миша">
+    <div class="err">Укажите имя ребёнка.</div>
+  </div>
+
+  <div class="f" data-f="childAge">
+    <label for="childAge">Возраст ребёнка</label>
+    <input type="number" id="childAge" inputmode="numeric" min="0" max="18" step="1" placeholder="Полных лет">
+    <div class="err">Укажите возраст числом от 0 до 18.</div>
+  </div>
+
+  <div class="f" data-f="features">
+    <label for="features">Особенности ребёнка</label>
+    <textarea id="features" placeholder="Простыми словами: что ребёнок любит, что может делать сам, что ему может быть сложно."></textarea>
+    <p class="hint">Это поможет понять, какой подарок будет уместен.</p>
+    <div class="err">Пожалуйста, опишите особенности ребёнка.</div>
+  </div>
+
+  <div class="f" data-f="situation">
+    <label for="situation">Сложная жизненная ситуация</label>
+    <textarea id="situation" placeholder="Кратко опишите вашу ситуацию своими словами."></textarea>
+    <div class="err">Пожалуйста, опишите ситуацию.</div>
+  </div>
+
+  <fieldset data-f="gifts">
+    <legend>Что любит ребёнок / идеи для подарка</legend>
+    <div class="two-lines">
+      <div>
+        <label for="expensiveNeed">Дорогая необходимость</label>
+        <input type="text" id="expensiveNeed" placeholder="Что нужно ребёнку, но семье сложно купить">
+      </div>
+      <div>
+        <label for="budgetIdeas">Бюджетные идеи подарков</label>
+        <input type="text" id="budgetIdeas" placeholder="Недорогие вещи, которые порадуют ребёнка">
+      </div>
+    </div>
+    <div class="err">Заполните обе строки с идеями для подарка.</div>
+  </fieldset>
+
+  <input class="hp" type="text" id="website" tabindex="-1" autocomplete="off" aria-hidden="true">
+
+  <div class="f" data-f="consent">
+    <label class="opt"><input type="checkbox" id="consent"> <span>Даю согласие на обработку моих персональных данных и данных ребёнка для организации акции.</span></label>
+    <div class="err">Поставьте галочку, чтобы отправить анкету.</div>
+  </div>
+
+  <button type="submit" id="send">Отправить анкету</button>
+  <div id="fail" role="alert">Не удалось отправить анкету. Проверьте интернет и попробуйте ещё раз.</div>
+</form>
+
+<section class="done" id="done" role="status" aria-live="polite">
+  <h2>Спасибо, анкета принята!</h2>
+  <p id="doneText">Мы получили информацию о ребёнке и рассмотрим анкету.</p>
+  <button type="button" id="again">Заполнить ещё одну анкету</button>
+</section>
+</main>
+
+<script>
+const CONFIG = {
+  scriptUrl: 'https://script.google.com/macros/s/AKfycby6f8oJWYXJirDjXmvE0cEXWFj0a7bZn9KNPa9qDId6ekyx0MSsb_EUz8rvoALw3aaS/exec',
+  eventId: 'novogodnyaya-korobochka-2026'
+};
+
+const $ = id => document.getElementById(id);
+const words = s => s.trim().split(/\s+/).filter(Boolean);
+const nameOk = s => /^[\p{L}\-'’.\s]+$/u.test(s);
+const mark = (key, bad) => document.querySelector('[data-f="' + key + '"]').classList.toggle('bad', bad);
+let submitting = false;
+
+$('form').addEventListener('submit', async event => {
+  event.preventDefault();
+  if (submitting) return;
+
+  const fio = $('fio').value.trim();
+  const childName = $('childName').value.trim();
+  const childAge = $('childAge').value.trim();
+  const ageNumber = Number(childAge);
+  const features = $('features').value.trim();
+  const situation = $('situation').value.trim();
+  const expensiveNeed = $('expensiveNeed').value.trim();
+  const budgetIdeas = $('budgetIdeas').value.trim();
+
+  const checks = {
+    fio: words(fio).length >= 3 && nameOk(fio),
+    childName: words(childName).length >= 1 && nameOk(childName),
+    childAge: childAge !== '' && Number.isInteger(ageNumber) && ageNumber >= 0 && ageNumber <= 18,
+    features: features.length >= 3,
+    situation: situation.length >= 5,
+    gifts: expensiveNeed.length >= 2 && budgetIdeas.length >= 2,
+    consent: $('consent').checked
+  };
+
+  let firstBad = null;
+  for (const key in checks) {
+    mark(key, !checks[key]);
+    if (!checks[key] && !firstBad) firstBad = key;
+  }
+  if (firstBad) {
+    document.querySelector('[data-f="' + firstBad + '"]').scrollIntoView({ block: 'center', behavior: 'smooth' });
+    return;
+  }
+
+  const payload = {
+    _event: CONFIG.eventId,
+    'ФИО': fio,
+    'Имя ребёнка': childName,
+    'Возраст ребёнка': childAge,
+    'Особенности ребёнка': features,
+    'Сложная жизненная ситуация': situation,
+    'Дорогая необходимость': expensiveNeed,
+    'Бюджетные идеи подарков': budgetIdeas,
+    website: $('website').value
+  };
+
+  const button = $('send');
+  button.disabled = true;
+  button.textContent = 'Отправляем…';
+  $('fail').style.display = 'none';
+  submitting = true;
+
+  const slowTimer = setTimeout(() => {
+    if (submitting) button.textContent = 'Отправляем… Пожалуйста, подождите ещё немного';
+  }, 10000);
+
+  try {
+    if (!/^https:\/\/script\.google\.com\/macros\/s\/.+\/exec$/.test(CONFIG.scriptUrl)) {
+      throw new Error('Сначала вставьте URL веб-приложения Apps Script в CONFIG.scriptUrl.');
+    }
+    const response = await fetch(CONFIG.scriptUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify(payload)
+    });
+    if (!response.ok) throw new Error('HTTP ' + response.status);
+
+    const result = await response.json();
+    if (result.result !== 'ok' || !result.status) {
+      throw new Error(result.message || 'Сервер не подтвердил сохранение анкеты');
+    }
+
+    $('form').style.display = 'none';
+    $('done').style.display = 'block';
+    $('done').scrollIntoView({ block: 'center', behavior: 'smooth' });
+  } catch (error) {
+    console.error(error);
+    $('fail').style.display = 'block';
+    button.disabled = false;
+    button.textContent = 'Отправить анкету';
+  } finally {
+    submitting = false;
+    clearTimeout(slowTimer);
+  }
+});
+
+$('again').addEventListener('click', () => location.reload());
+</script>
+</body>
+</html>
