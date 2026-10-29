@@ -14,6 +14,9 @@ h1{font:700 clamp(34px,7vw,52px)/1.08 Georgia,serif;color:var(--plum);margin:0 a
 .notice{max-width:650px;margin:25px auto 0;padding:17px 20px;border:2px solid var(--gold);border-radius:16px;background:#fffdf9;text-align:left}
 .notice p{margin:0}.notice p+p{margin-top:10px}
 .notice strong{color:var(--plum)}
+.seats{max-width:650px;margin:15px auto 0;padding:10px 16px;border:1.5px solid var(--gold);border-radius:999px;background:#fffdf9;font-weight:700;color:var(--plum)}
+.seats b{font-size:20px}.seats.clickable{cursor:pointer}.seats.clickable b{font-size:16px;text-decoration:underline dotted}
+.reserve{display:none;background:#FFF4DC;border:2px solid var(--gold);border-radius:16px;padding:14px 18px;margin:0 0 20px;font-weight:600}
 main{max-width:670px;margin:-42px auto 60px;padding:0 16px}
 form,.done{background:#fff;border-radius:22px;padding:30px 24px;box-shadow:0 12px 40px rgba(93,44,112,.14)}
 h2{font:700 29px/1.15 Georgia,serif;color:var(--plum);margin:0 0 11px}
@@ -46,12 +49,15 @@ button:hover{background:#4b2359}button:focus-visible{outline:3px solid var(--gol
     <p><strong>Пожалуйста, заполняйте форму, если вы действительно находитесь в сложной жизненной ситуации.</strong></p>
     <p>Например: вы воспитываете ребёнка в одиночку, у вас многодетная семья, супруг не работает или есть другие серьёзные обстоятельства.</p>
   </div>
+  <p class="seats" id="seatsBox">🎁 Свободных мест для детей: <b id="seatsLeft">…</b> из <span id="seatsTotal">100</span></p>
 </header>
 
 <main>
 <form id="form" novalidate>
   <h2>Расскажите о ребёнке</h2>
   <p class="intro">Пожалуйста, заполните анкету внимательно. Так нам будет проще подобрать подходящий подарок.</p>
+
+  <div class="reserve" id="reserveBanner">Основные 100 мест уже заняты, но анкету всё ещё можно отправить <b>в резерв</b>.</div>
 
   <div class="important">
     <strong>Важно:</strong> подарок вручает не Дед Мороз, а представитель церкви в протестантской церкви.
@@ -125,7 +131,8 @@ button:hover{background:#4b2359}button:focus-visible{outline:3px solid var(--gol
 <script>
 const CONFIG = {
   scriptUrl: 'https://script.google.com/macros/s/AKfycby6f8oJWYXJirDjXmvE0cEXWFj0a7bZn9KNPa9qDId6ekyx0MSsb_EUz8rvoALw3aaS/exec',
-  eventId: 'novogodnyaya-korobochka-2026'
+  eventId: 'novogodnyaya-korobochka-2026',
+  seats: 100
 };
 
 const $ = id => document.getElementById(id);
@@ -133,6 +140,91 @@ const words = s => s.trim().split(/\s+/).filter(Boolean);
 const nameOk = s => /^[\p{L}\-'’.\s]+$/u.test(s);
 const mark = (key, bad) => document.querySelector('[data-f="' + key + '"]').classList.toggle('bad', bad);
 let submitting = false;
+let seatsFull = false;
+let counterCycle = 0;
+const CACHE_KEY = 'seats_' + CONFIG.eventId;
+const CACHE_TTL = 60 * 1000;
+const RETRY_DELAYS = [0, 5000, 20000];
+const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
+
+function cacheGet() {
+  try {
+    const value = JSON.parse(localStorage.getItem(CACHE_KEY));
+    return value && Date.now() - value.t < CACHE_TTL ? value : null;
+  } catch (_) { return null; }
+}
+function cachePut(left) {
+  try { localStorage.setItem(CACHE_KEY, JSON.stringify({ left, t: Date.now() })); } catch (_) {}
+}
+
+async function getJson(url, timeout = 8000) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeout);
+  try {
+    const response = await fetch(url, { cache: 'no-store', signal: controller.signal });
+    if (!response.ok) throw new Error('HTTP ' + response.status);
+    return await response.json();
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+function applyLeft(left) {
+  seatsFull = left <= 0;
+  $('seatsLeft').textContent = left;
+  $('reserveBanner').style.display = seatsFull ? 'block' : 'none';
+  $('send').textContent = seatsFull ? 'Отправить анкету в резерв' : 'Отправить анкету';
+}
+
+async function loadCounter() {
+  if (submitting) return;
+  const cycle = ++counterCycle;
+  const box = $('seatsBox');
+  box.classList.remove('clickable');
+  box.removeAttribute('title');
+  $('seatsTotal').textContent = CONFIG.seats;
+
+  const cached = cacheGet();
+  if (cached) applyLeft(cached.left);
+  else $('seatsLeft').textContent = '…';
+
+  for (let i = 0; i < RETRY_DELAYS.length; i++) {
+    if (i) await sleep(RETRY_DELAYS[i]);
+    if (cycle !== counterCycle || submitting) return;
+    try {
+      const url = new URL(CONFIG.scriptUrl);
+      url.searchParams.set('action', 'count');
+      url.searchParams.set('event', CONFIG.eventId);
+      url.searchParams.set('_ts', String(Date.now()));
+      const data = await getJson(url.toString());
+      if (cycle !== counterCycle) return;
+      if (data.result !== 'ok' || !Number.isFinite(Number(data.available))) {
+        throw new Error('Некорректный ответ счётчика');
+      }
+      const capacity = Number(data.capacity);
+      const left = Math.max(0, Number(data.available));
+      if (Number.isFinite(capacity) && capacity > 0) $('seatsTotal').textContent = capacity;
+      cachePut(left);
+      applyLeft(left);
+      return;
+    } catch (error) {
+      console.warn('Не удалось обновить счётчик:', error);
+    }
+  }
+
+  if (cycle !== counterCycle) return;
+  if (!cached) $('seatsLeft').textContent = 'обновить ↻';
+  box.classList.add('clickable');
+  box.title = 'Нажмите, чтобы обновить счётчик';
+}
+
+$('seatsBox').addEventListener('click', () => {
+  if ($('seatsBox').classList.contains('clickable') && !submitting) loadCounter();
+});
+window.addEventListener('focus', loadCounter);
+window.addEventListener('online', loadCounter);
+setInterval(loadCounter, 60000);
+loadCounter();
 
 $('form').addEventListener('submit', async event => {
   event.preventDefault();
@@ -190,9 +282,6 @@ $('form').addEventListener('submit', async event => {
   }, 10000);
 
   try {
-    if (!/^https:\/\/script\.google\.com\/macros\/s\/.+\/exec$/.test(CONFIG.scriptUrl)) {
-      throw new Error('Сначала вставьте URL веб-приложения Apps Script в CONFIG.scriptUrl.');
-    }
     const response = await fetch(CONFIG.scriptUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'text/plain;charset=utf-8' },
@@ -205,6 +294,15 @@ $('form').addEventListener('submit', async event => {
       throw new Error(result.message || 'Сервер не подтвердил сохранение анкеты');
     }
 
+    if (Number.isFinite(Number(result.available))) {
+      $('seatsTotal').textContent = Number(result.capacity) || CONFIG.seats;
+      cachePut(Math.max(0, Number(result.available)));
+      applyLeft(Math.max(0, Number(result.available)));
+    }
+
+    $('doneText').textContent = result.status === 'резерв'
+      ? 'Основные места уже заняты. Ваша анкета принята в резерв.'
+      : 'Мы получили информацию о ребёнке и рассмотрим анкету.';
     $('form').style.display = 'none';
     $('done').style.display = 'block';
     $('done').scrollIntoView({ block: 'center', behavior: 'smooth' });
@@ -212,7 +310,7 @@ $('form').addEventListener('submit', async event => {
     console.error(error);
     $('fail').style.display = 'block';
     button.disabled = false;
-    button.textContent = 'Отправить анкету';
+    button.textContent = seatsFull ? 'Отправить анкету в резерв' : 'Отправить анкету';
   } finally {
     submitting = false;
     clearTimeout(slowTimer);
