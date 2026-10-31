@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Новогодняя коробочка</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%8E%81%3C/text%3E%3C/svg%3E">
 <style>
 :root{--plum:#5D2C70;--ink:#2B1636;--gold:#D4A64A;--blush:#FADCD9;--ivory:#FFF8F5;--line:#E7CFC9;--err:#B3261E;--ok:#287044}
 *{box-sizing:border-box}
@@ -60,7 +61,7 @@ button:hover{background:#4b2359}button:focus-visible{outline:3px solid var(--gol
   <div class="reserve" id="reserveBanner">Основные 100 мест уже заняты, но анкету всё ещё можно отправить <b>в резерв</b>.</div>
 
   <div class="important">
-    <strong>Важно:</strong> подарок вручает не Дед Мороз, а представитель церкви в протестантской церкви.
+    <strong>Важно:</strong> подарок вручает не Дед Мороз, а представитель церкви. Нужно будет приехать в протестантскую церковь.
   </div>
 
   <div class="f" data-f="fio">
@@ -78,8 +79,8 @@ button:hover{background:#4b2359}button:focus-visible{outline:3px solid var(--gol
 
   <div class="f" data-f="childAge">
     <label for="childAge">Возраст ребёнка</label>
-    <input type="number" id="childAge" inputmode="numeric" min="0" max="18" step="1" placeholder="Полных лет">
-    <div class="err">Укажите возраст числом от 0 до 18.</div>
+    <input type="number" id="childAge" inputmode="numeric" min="0" max="40" step="1" placeholder="Полных лет">
+    <div class="err">Укажите возраст числом от 0 до 40.</div>
   </div>
 
   <div class="f" data-f="features">
@@ -101,14 +102,22 @@ button:hover{background:#4b2359}button:focus-visible{outline:3px solid var(--gol
       <div>
         <label for="expensiveNeed">Дорогая необходимость</label>
         <input type="text" id="expensiveNeed" placeholder="Что нужно ребёнку, но семье сложно купить">
+        <p class="hint">Укажите то, что, по вашему мнению, необходимо ребёнку, но для вашей семейной ситуации это сложно купить.</p>
       </div>
       <div>
         <label for="budgetIdeas">Бюджетные идеи подарков</label>
         <input type="text" id="budgetIdeas" placeholder="Недорогие вещи, которые порадуют ребёнка">
+        <p class="hint">Перечислите несколько других недорогих подарков: игрушки, сувениры или вещи, которые будут приятны ребёнку.</p>
       </div>
     </div>
     <div class="err">Заполните обе строки с идеями для подарка.</div>
   </fieldset>
+
+  <div class="f">
+    <label for="notes">Примечания</label>
+    <textarea id="notes" placeholder="Необязательно: напишите здесь всё, что считаете важным сообщить"></textarea>
+    <p class="hint">Это поле необязательное.</p>
+  </div>
 
   <input class="hp" type="text" id="website" tabindex="-1" autocomplete="off" aria-hidden="true">
 
@@ -238,11 +247,12 @@ $('form').addEventListener('submit', async event => {
   const situation = $('situation').value.trim();
   const expensiveNeed = $('expensiveNeed').value.trim();
   const budgetIdeas = $('budgetIdeas').value.trim();
+  const notes = $('notes').value.trim();
 
   const checks = {
     fio: words(fio).length >= 3 && nameOk(fio),
     childName: words(childName).length >= 1 && nameOk(childName),
-    childAge: childAge !== '' && Number.isInteger(ageNumber) && ageNumber >= 0 && ageNumber <= 18,
+    childAge: childAge !== '' && Number.isInteger(ageNumber) && ageNumber >= 0 && ageNumber <= 40,
     features: features.length >= 3,
     situation: situation.length >= 5,
     gifts: expensiveNeed.length >= 2 && budgetIdeas.length >= 2,
@@ -268,6 +278,7 @@ $('form').addEventListener('submit', async event => {
     'Сложная жизненная ситуация': situation,
     'Дорогая необходимость': expensiveNeed,
     'Бюджетные идеи подарков': budgetIdeas,
+    'Примечания': notes,
     website: $('website').value
   };
 
