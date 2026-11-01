@@ -25,7 +25,7 @@ h2{font:700 29px/1.15 Georgia,serif;color:var(--plum);margin:0 0 11px}
 .f,fieldset{margin:0 0 20px}
 label,legend{display:block;font-weight:700;margin-bottom:7px;padding:0}
 fieldset{border:0;padding:0}
-input[type=text],input[type=number],textarea{display:block;width:100%;font:inherit;padding:13px 14px;border:1.5px solid var(--line);border-radius:12px;background:var(--ivory);color:var(--ink)}
+input[type=text],input[type=number],input[type=tel],textarea{display:block;width:100%;font:inherit;padding:13px 14px;border:1.5px solid var(--line);border-radius:12px;background:var(--ivory);color:var(--ink)}
 textarea{min-height:88px;resize:vertical}
 input:focus-visible,textarea:focus-visible{outline:3px solid var(--gold);outline-offset:1px;border-color:var(--plum)}
 .two-lines{display:grid;gap:13px}
@@ -65,10 +65,16 @@ button:hover{background:#4b2359}button:focus-visible{outline:3px solid var(--gol
   </div>
 
   <div class="f" data-f="fio">
-    <label for="fio">ФИО</label>
+    <label for="fio">ФИО мамы</label>
     <input type="text" id="fio" autocomplete="name" placeholder="Иванова Мария Ивановна">
-    <p class="hint">Фамилия, имя и отчество — именно в таком порядке.</p>
+    <p class="hint">ФАМИЛИЯ ИМЯ ОТЧЕСТВО — в таком порядке.</p>
     <div class="err">Укажите фамилию, имя и отчество полностью.</div>
+  </div>
+
+  <div class="f" data-f="phone">
+    <label for="phone">Номер телефона</label>
+    <input type="tel" id="phone" autocomplete="tel" inputmode="tel" placeholder="+375 29 123-45-67">
+    <div class="err">Укажите корректный номер телефона.</div>
   </div>
 
   <div class="f" data-f="childName">
@@ -147,6 +153,7 @@ const CONFIG = {
 const $ = id => document.getElementById(id);
 const words = s => s.trim().split(/\s+/).filter(Boolean);
 const nameOk = s => /^[\p{L}\-'’.\s]+$/u.test(s);
+const phoneOk = s => { const digits = s.replace(/\D/g, ''); return digits.length >= 9 && digits.length <= 15; };
 const mark = (key, bad) => document.querySelector('[data-f="' + key + '"]').classList.toggle('bad', bad);
 let submitting = false;
 let seatsFull = false;
@@ -240,6 +247,7 @@ $('form').addEventListener('submit', async event => {
   if (submitting) return;
 
   const fio = $('fio').value.trim();
+  const phone = $('phone').value.trim();
   const childName = $('childName').value.trim();
   const childAge = $('childAge').value.trim();
   const ageNumber = Number(childAge);
@@ -251,6 +259,7 @@ $('form').addEventListener('submit', async event => {
 
   const checks = {
     fio: words(fio).length >= 3 && nameOk(fio),
+    phone: phoneOk(phone),
     childName: words(childName).length >= 1 && nameOk(childName),
     childAge: childAge !== '' && Number.isInteger(ageNumber) && ageNumber >= 0 && ageNumber <= 40,
     features: features.length >= 3,
@@ -272,6 +281,7 @@ $('form').addEventListener('submit', async event => {
   const payload = {
     _event: CONFIG.eventId,
     'ФИО': fio,
+    'Телефон': phone,
     'Имя ребёнка': childName,
     'Возраст ребёнка': childAge,
     'Особенности ребёнка': features,
